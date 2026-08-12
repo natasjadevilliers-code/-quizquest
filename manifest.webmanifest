@@ -1,0 +1,9 @@
+{
+  "name": "QuizQuest Learning App",
+  "short_name": "QuizQuest",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "description": "Interactive learning and quiz app for capitals, flags, astronomy, history, biology and literature."
+}

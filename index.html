@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0f172a" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="QuizQuest" />
+<link rel="manifest" href="manifest.webmanifest" />
+<title>QuizQuest Learning App</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#111827; --panel2:#1f2937; --text:#f8fafc; --muted:#cbd5e1;
+    --accent:#8b5cf6; --accent2:#22c55e; --bad:#ef4444; --warn:#f59e0b; --line:#334155;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:
+      radial-gradient(circle at top,#312e81 0,#0f172a 42%,#020617 100%);color:var(--text);min-height:100vh}
+  .app{max-width:980px;margin:0 auto;padding:24px}
+  .hero{text-align:center;padding:24px 0 12px}
+  h1{font-size:clamp(2rem,5vw,3.5rem);margin:.2em 0}
+  h2{margin-top:0}
+  p{color:var(--muted);line-height:1.55}
+  .panel{background:rgba(17,24,39,.94);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.28);margin:18px 0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+  button,.btn{border:none;border-radius:14px;padding:13px 16px;font-size:1rem;font-weight:700;cursor:pointer;transition:.18s}
+  button:hover{transform:translateY(-1px)}
+  .primary{background:var(--accent);color:white}
+  .secondary{background:#243042;color:white;border:1px solid var(--line)}
+  .good{background:var(--accent2);color:#052e16}
+  .danger{background:var(--bad);color:white}
+  .category{background:#172033;color:white;border:1px solid #374151;text-align:left;min-height:72px}
+  .category.selected{outline:3px solid var(--accent);background:#2e2456}
+  .topbar{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+  .badge{display:inline-block;border-radius:999px;padding:7px 11px;background:#1e293b;color:#ddd;font-size:.9rem;border:1px solid #334155}
+  .question{font-size:clamp(1.2rem,3vw,1.7rem);font-weight:800;margin:14px 0}
+  .answers{display:grid;gap:10px;margin:18px 0}
+  .answer{display:flex;align-items:center;gap:10px;background:#172033;padding:13px;border-radius:14px;border:1px solid #374151}
+  .answer:hover{border-color:#8b5cf6}
+  .answer input{width:20px;height:20px}
+  .feedback{border-radius:14px;padding:14px;margin:12px 0;font-weight:700}
+  .feedback.correct{background:#052e16;color:#bbf7d0;border:1px solid #166534}
+  .feedback.wrong{background:#450a0a;color:#fecaca;border:1px solid #991b1b}
+  .fact{background:#1e293b;border-left:5px solid var(--warn);padding:14px;border-radius:10px;color:#e2e8f0}
+  .progress{height:10px;background:#1e293b;border-radius:999px;overflow:hidden;margin:12px 0}
+  .progress>div{height:100%;background:linear-gradient(90deg,#8b5cf6,#22c55e);width:0%}
+  .hidden{display:none!important}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center}
+  .stat{background:#172033;padding:16px;border-radius:16px}
+  .stat strong{display:block;font-size:1.6rem}
+  .small{font-size:.9rem;color:var(--muted)}
+  footer{text-align:center;color:#94a3b8;padding:20px;font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hero">
+    <div class="badge">Interactive Study + Quiz</div>
+    <h1>QuizQuest</h1>
+    <p>Learn first, then test yourself. Questions do not repeat during the same session.</p>
+  </div>
+
+  <section id="home" class="panel">
+    <h2>Choose categories</h2>
+    <div id="categoryGrid" class="grid"></div>
+    <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="primary" onclick="startLearning()">Start Learning Round</button>
+      <button class="secondary" onclick="startQuiz()">Skip to Quiz</button>
+    </div>
+    <p class="small">Tip: select one category to focus, or several for a mixed quiz.</p>
+  </section>
+
+  <section id="learning" class="panel hidden">
+    <div class="topbar">
+      <h2>Learning Round</h2>
+      <span id="learnCounter" class="badge"></span>
+    </div>
+    <div class="progress"><div id="learnProgress"></div></div>
+    <div id="learnCategory" class="badge"></div>
+    <div id="learnQuestion" class="question"></div>
+    <div id="learnAnswer" class="fact"></div>
+    <div id="learnExtra" class="small" style="margin-top:10px"></div>
+    <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="primary" onclick="nextLearn()">Next</button>
+      <button class="secondary" onclick="startQuiz()">Start Quiz Now</button>
+    </div>
+  </section>
+
+  <section id="quiz" class="panel hidden">
+    <div class="topbar">
+      <h2>Quiz Round</h2>
+      <div><span id="quizCounter" class="badge"></span> <span id="scoreBadge" class="badge"></span></div>
+    </div>
+    <div class="progress"><div id="quizProgress"></div></div>
+    <div id="quizCategory" class="badge"></div>
+    <div id="quizQuestion" class="question"></div>
+    <div id="instruction" class="small"></div>
+    <div id="answers" class="answers"></div>
+    <div id="feedback"></div>
+    <button id="checkBtn" class="primary" onclick="checkAnswer()">Check answer</button>
+    <button id="nextBtn" class="good hidden" onclick="nextQuestion()">Next question</button>
+  </section>
+
+  <section id="results" class="panel hidden">
+    <h2>Round complete 🎉</h2>
+    <div class="stats">
+      <div class="stat"><strong id="finalScore">0</strong><span>Correct</span></div>
+      <div class="stat"><strong id="finalTotal">0</strong><span>Questions</span></div>
+      <div class="stat"><strong id="finalPercent">0%</strong><span>Score</span></div>
+    </div>
+    <p id="resultMessage"></p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="primary" onclick="restartSame()">New questions</button>
+      <button class="secondary" onclick="goHome()">Change categories</button>
+    </div>
+  </section>
+
+  <footer>Built as a self-contained browser app. Your progress stays in this tab only.</footer>
+</div>
+
+<script>
+const categories = {
+  "Capital Cities": [
+    {q:"What is the capital of New Zealand?", a:["Auckland","Wellington","Christchurch","Dunedin"], c:[1], fact:"Wellington is the capital of New Zealand."},
+    {q:"What is the capital of Canada?", a:["Toronto","Ottawa","Vancouver","Montreal"], c:[1], fact:"Ottawa is Canada's capital."},
+    {q:"What is the capital of Australia?", a:["Sydney","Melbourne","Canberra","Perth"], c:[2], fact:"Canberra is Australia's capital."},
+    {q:"What is the capital of Brazil?", a:["Rio de Janeiro","São Paulo","Brasília","Salvador"], c:[2], fact:"Brasília became Brazil's capital in 1960."},
+    {q:"What is the capital of Japan?", a:["Kyoto","Tokyo","Osaka","Nagoya"], c:[1], fact:"Tokyo is the capital of Japan."},
+    {q:"What is the capital of Egypt?", a:["Alexandria","Cairo","Giza","Luxor"], c:[1], fact:"Cairo is Egypt's capital."},
+    {q:"What is the capital of Kenya?", a:["Nairobi","Mombasa","Kampala","Kigali"], c:[0], fact:"Nairobi is the capital of Kenya."},
+    {q:"What is the capital of Norway?", a:["Bergen","Oslo","Stockholm","Helsinki"], c:[1], fact:"Oslo is Norway's capital."},
+    {q:"What is the capital of Argentina?", a:["Buenos Aires","Córdoba","Lima","Santiago"], c:[0], fact:"Buenos Aires is Argentina's capital."},
+    {q:"What is the capital of Thailand?", a:["Phuket","Bangkok","Chiang Mai","Hanoi"], c:[1], fact:"Bangkok is Thailand's capital."}
+  ],
+  "Flags of the World": [
+    {q:"Which country's flag features a red maple leaf?", a:["Canada","Austria","Denmark","Switzerland"], c:[0], fact:"Canada's flag has a red maple leaf."},
+    {q:"Which country's flag has a red circle on a white field?", a:["Japan","Bangladesh","South Korea","Indonesia"], c:[0], fact:"Japan's flag represents the sun with a red disc."},
+    {q:"Which country's flag includes a cedar tree?", a:["Lebanon","Cyprus","Jordan","Nepal"], c:[0], fact:"Lebanon's flag features a green cedar tree."},
+    {q:"Which national flag is the only one that is not rectangular or square?", a:["Nepal","Bhutan","Qatar","Sri Lanka"], c:[0], fact:"Nepal's flag is made of two stacked pennant shapes."},
+    {q:"Which country's flag has a dragon on it?", a:["Bhutan","India","Mongolia","Laos"], c:[0], fact:"Bhutan's flag features the Druk, or Thunder Dragon."},
+    {q:"Which country's flag contains the Union Jack and four red stars?", a:["New Zealand","Australia","Fiji","Tuvalu"], c:[0], fact:"New Zealand's flag has the Union Jack and four red stars representing the Southern Cross."},
+    {q:"Which country's flag is blue and yellow with a Scandinavian cross?", a:["Sweden","Finland","Norway","Iceland"], c:[0], fact:"Sweden uses a yellow Nordic cross on blue."},
+    {q:"Which country's flag has black, red, and gold horizontal stripes?", a:["Germany","Belgium","Romania","Spain"], c:[0], fact:"Germany's flag is black, red and gold."}
+  ],
+  "Astronomy": [
+    {q:"Which planet is closest to the Sun?", a:["Venus","Mercury","Mars","Earth"], c:[1], fact:"Mercury is the closest planet to the Sun."},
+    {q:"Which planet is famous for its prominent ring system?", a:["Mars","Saturn","Mercury","Venus"], c:[1], fact:"All giant planets have rings, but Saturn's are the most prominent."},
+    {q:"What is the name of our galaxy?", a:["Andromeda","Milky Way","Sombrero","Whirlpool"], c:[1], fact:"The Solar System is part of the Milky Way galaxy."},
+    {q:"Which objects are stars?", a:["The Sun","Sirius","Polaris","Mars"], c:[0,1,2], fact:"The Sun, Sirius and Polaris are stars; Mars is a planet."},
+    {q:"What causes the phases of the Moon?", a:["Earth's shadow","The changing view of the Moon's sunlit half","Clouds","The Moon changing shape"], c:[1], fact:"Moon phases come from our changing view of its sunlit half as it orbits Earth."},
+    {q:"Which planet has the Great Red Spot?", a:["Jupiter","Saturn","Neptune","Uranus"], c:[0], fact:"The Great Red Spot is a giant storm on Jupiter."},
+    {q:"What is a light-year a measure of?", a:["Time","Distance","Brightness","Mass"], c:[1], fact:"A light-year is the distance light travels in one year."},
+    {q:"Which are dwarf planets?", a:["Pluto","Ceres","Eris","Europa"], c:[0,1,2], fact:"Pluto, Ceres and Eris are dwarf planets; Europa is a moon of Jupiter."}
+  ],
+  "New Zealand History": [
+    {q:"In what year was the Treaty of Waitangi first signed?", a:["1769","1840","1865","1907"], c:[1], fact:"The Treaty of Waitangi was first signed on 6 February 1840."},
+    {q:"Who was the first European known to reach New Zealand?", a:["James Cook","Abel Tasman","Samuel Marsden","Jean Batten"], c:[1], fact:"Abel Tasman reached New Zealand in 1642."},
+    {q:"Which explorer mapped much of New Zealand's coastline in 1769–1770?", a:["James Cook","Abel Tasman","Ernest Rutherford","Edmund Hillary"], c:[0], fact:"James Cook charted much of New Zealand's coastline during his first Pacific voyage."},
+    {q:"New Zealand became the first self-governing country to grant women the parliamentary vote in which year?", a:["1840","1893","1919","1945"], c:[1], fact:"Women's suffrage became law in New Zealand in 1893."},
+    {q:"Who is closely associated with New Zealand's successful women's suffrage campaign?", a:["Kate Sheppard","Jean Batten","Whina Cooper","Katherine Mansfield"], c:[0], fact:"Kate Sheppard was a leading figure in the women's suffrage movement."},
+    {q:"Which conflict began in 1845 in the Bay of Islands?", a:["Northern War","Boer War","Crimean War","Gallipoli campaign"], c:[0], fact:"The Northern War began in 1845 and formed part of the New Zealand Wars."},
+    {q:"Which day commemorates the first signing of the Treaty of Waitangi?", a:["ANZAC Day","Waitangi Day","Matariki","Labour Day"], c:[1], fact:"Waitangi Day is observed on 6 February."},
+    {q:"Who became famous for conquering Mount Everest with Tenzing Norgay in 1953?", a:["Edmund Hillary","Peter Blake","Charles Upham","Richard Pearse"], c:[0], fact:"New Zealander Edmund Hillary and Tenzing Norgay reached Everest's summit in 1953."}
+  ],
+  "Biology": [
+    {q:"What organelle is often called the powerhouse of the cell?", a:["Nucleus","Mitochondrion","Ribosome","Golgi apparatus"], c:[1], fact:"Mitochondria produce much of a cell's usable energy."},
+    {q:"Which molecule carries genetic information in most living organisms?", a:["DNA","ATP","Glucose","Cholesterol"], c:[0], fact:"DNA stores hereditary information in most organisms."},
+    {q:"Which are parts of the human circulatory system?", a:["Heart","Blood vessels","Blood","Lungs"], c:[0,1,2], fact:"The circulatory system consists principally of the heart, blood and blood vessels."},
+    {q:"What process do plants use to convert light energy into chemical energy?", a:["Respiration","Photosynthesis","Fermentation","Digestion"], c:[1], fact:"Photosynthesis uses light energy to produce sugars."},
+    {q:"Which blood cells help fight infection?", a:["Red blood cells","White blood cells","Platelets","Plasma"], c:[1], fact:"White blood cells are central to immune defence."},
+    {q:"Which organ primarily filters blood to make urine?", a:["Liver","Kidneys","Pancreas","Spleen"], c:[1], fact:"The kidneys filter blood and produce urine."},
+    {q:"How many chromosomes are normally found in a human body cell?", a:["23","46","44","48"], c:[1], fact:"Most human body cells contain 46 chromosomes arranged in 23 pairs."},
+    {q:"Which are mammals?", a:["Dolphin","Bat","Penguin","Whale"], c:[0,1,3], fact:"Dolphins, bats and whales are mammals; penguins are birds."}
+  ],
+  "Literature": [
+    {q:"Who wrote 'Pride and Prejudice'?", a:["Jane Austen","Charlotte Brontë","George Eliot","Mary Shelley"], c:[0], fact:"Jane Austen published Pride and Prejudice in 1813."},
+    {q:"Who wrote 'Romeo and Juliet'?", a:["William Shakespeare","Charles Dickens","Geoffrey Chaucer","John Milton"], c:[0], fact:"Romeo and Juliet is a tragedy by William Shakespeare."},
+    {q:"Who wrote 'The Hobbit'?", a:["J.R.R. Tolkien","C.S. Lewis","George Orwell","Roald Dahl"], c:[0], fact:"J.R.R. Tolkien wrote The Hobbit."},
+    {q:"Which works were written by George Orwell?", a:["1984","Animal Farm","Jane Eyre","The Great Gatsby"], c:[0,1], fact:"George Orwell wrote both 1984 and Animal Farm."},
+    {q:"Who created Sherlock Holmes?", a:["Agatha Christie","Arthur Conan Doyle","Edgar Allan Poe","H.G. Wells"], c:[1], fact:"Arthur Conan Doyle created Sherlock Holmes."},
+    {q:"Which novel begins with the character Ishmael narrating a whaling story?", a:["Moby-Dick","Treasure Island","Dracula","Frankenstein"], c:[0], fact:"Herman Melville's Moby-Dick is narrated largely by Ishmael."},
+    {q:"Who wrote 'Frankenstein'?", a:["Mary Shelley","Emily Brontë","Virginia Woolf","Louisa May Alcott"], c:[0], fact:"Mary Shelley wrote Frankenstein."},
+    {q:"Which of these are plays by Shakespeare?", a:["Macbeth","Hamlet","Othello","Oliver Twist"], c:[0,1,2], fact:"Macbeth, Hamlet and Othello are Shakespeare plays; Oliver Twist is a Dickens novel."}
+  ],
+  "World History": [
+    {q:"Which ships were used by Christopher Columbus on his first 1492 voyage across the Atlantic?", a:["Niña","Pinta","Santa María","Mayflower","Endeavour"], c:[0,1,2], fact:"Columbus's 1492 expedition used the Niña, Pinta and Santa María."},
+    {q:"The ancient pyramids at Giza were built in which civilization?", a:["Ancient Egypt","Roman Empire","Maya","Persia"], c:[0], fact:"The Giza pyramids were built in ancient Egypt."},
+    {q:"Which city was buried by Mount Vesuvius in AD 79?", a:["Pompeii","Athens","Sparta","Carthage"], c:[0], fact:"Pompeii was buried by the eruption of Vesuvius in AD 79."},
+    {q:"Which empire was ruled by Julius Caesar's adopted heir Augustus?", a:["Roman Empire","Ottoman Empire","Mughal Empire","Aztec Empire"], c:[0], fact:"Augustus became Rome's first emperor."},
+    {q:"Which events happened during the 20th century?", a:["World War I","World War II","Moon landing","American Revolution"], c:[0,1,2], fact:"World War I, World War II and the Moon landing all occurred in the 20th century."},
+    {q:"The Renaissance began in which European country?", a:["Italy","France","England","Germany"], c:[0], fact:"The Renaissance began in Italian city-states before spreading across Europe."},
+    {q:"Who was the first person to walk on the Moon?", a:["Neil Armstrong","Buzz Aldrin","Yuri Gagarin","John Glenn"], c:[0], fact:"Neil Armstrong became the first person to walk on the Moon in 1969."},
+    {q:"Which civilization built Machu Picchu?", a:["Inca","Aztec","Roman","Egyptian"], c:[0], fact:"Machu Picchu was built by the Inca civilization."}
+  ]
+};
+
+let selected = new Set(Object.keys(categories));
+let learningDeck = [];
+let quizDeck = [];
+let learnIndex = 0;
+let quizIndex = 0;
+let score = 0;
+let answered = false;
+
+const $ = id => document.getElementById(id);
+
+function init(){
+  const grid = $("categoryGrid");
+  grid.innerHTML="";
+  Object.keys(categories).forEach(cat=>{
+    const b=document.createElement("button");
+    b.className="category selected";
+    b.textContent=cat;
+    b.onclick=()=>{
+      if(selected.has(cat)){ selected.delete(cat); b.classList.remove("selected");}
+      else {selected.add(cat); b.classList.add("selected");}
+    };
+    grid.appendChild(b);
+  });
+}
+
+function selectedQuestions(){
+  let arr=[];
+  selected.forEach(cat=>categories[cat].forEach((q,i)=>arr.push({...q,category:cat,id:cat+"-"+i})));
+  return arr;
+}
+
+function shuffle(a){
+  const x=[...a];
+  for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [x[i],x[j]]=[x[j],x[i]];}
+  return x;
+}
+
+function showOnly(id){
+  ["home","learning","quiz","results"].forEach(x=>$(x).classList.toggle("hidden",x!==id));
+}
+
+function startLearning(){
+  if(selected.size===0){alert("Choose at least one category.");return;}
+  learningDeck=shuffle(selectedQuestions());
+  learnIndex=0;
+  showOnly("learning");
+  renderLearn();
+}
+
+function renderLearn(){
+  if(learnIndex>=learningDeck.length){ startQuiz(); return; }
+  const q=learningDeck[learnIndex];
+  $("learnCounter").textContent=`${learnIndex+1} / ${learningDeck.length}`;
+  $("learnProgress").style.width=`${((learnIndex+1)/learningDeck.length)*100}%`;
+  $("learnCategory").textContent=q.category;
+  $("learnQuestion").textContent=q.q;
+  $("learnAnswer").innerHTML="<strong>Answer:</strong> "+q.c.map(i=>q.a[i]).join(", ");
+  $("learnExtra").textContent=q.fact;
+}
+
+function nextLearn(){learnIndex++; renderLearn();}
+
+function startQuiz(){
+  if(selected.size===0){alert("Choose at least one category.");return;}
+  quizDeck=shuffle(selectedQuestions());
+  quizIndex=0; score=0; answered=false;
+  showOnly("quiz");
+  renderQuiz();
+}
+
+function renderQuiz(){
+  if(quizIndex>=quizDeck.length){showResults();return;}
+  answered=false;
+  $("feedback").innerHTML="";
+  $("checkBtn").classList.remove("hidden");
+  $("nextBtn").classList.add("hidden");
+  const q=quizDeck[quizIndex];
+  $("quizCounter").textContent=`${quizIndex+1} / ${quizDeck.length}`;
+  $("scoreBadge").textContent=`Score: ${score}`;
+  $("quizProgress").style.width=`${((quizIndex+1)/quizDeck.length)*100}%`;
+  $("quizCategory").textContent=q.category;
+  $("quizQuestion").textContent=q.q;
+  $("instruction").textContent=q.c.length>1 ? "Select ALL correct answers." : "Select one answer.";
+  const type=q.c.length>1 ? "checkbox":"radio";
+  const name="answer";
+  $("answers").innerHTML="";
+  q.a.forEach((txt,i)=>{
+    const label=document.createElement("label");
+    label.className="answer";
+    label.innerHTML=`<input type="${type}" name="${name}" value="${i}"><span>${txt}</span>`;
+    $("answers").appendChild(label);
+  });
+}
+
+function checkAnswer(){
+  if(answered)return;
+  const q=quizDeck[quizIndex];
+  const picks=[...document.querySelectorAll('#answers input:checked')].map(x=>Number(x.value)).sort((a,b)=>a-b);
+  if(picks.length===0){alert("Choose an answer first.");return;}
+  const correct=[...q.c].sort((a,b)=>a-b);
+  const ok=picks.length===correct.length && picks.every((v,i)=>v===correct[i]);
+  answered=true;
+  if(ok)score++;
+  $("scoreBadge").textContent=`Score: ${score}`;
+  $("feedback").innerHTML=`<div class="feedback ${ok?'correct':'wrong'}">${ok?'Correct! ✅':'Not quite. ❌'}<br><span style="font-weight:500">${q.fact}</span></div>`;
+  document.querySelectorAll('#answers input').forEach(inp=>{
+    inp.disabled=true;
+    const idx=Number(inp.value);
+    if(q.c.includes(idx)) inp.parentElement.style.borderColor="#22c55e";
+    else if(inp.checked) inp.parentElement.style.borderColor="#ef4444";
+  });
+  $("checkBtn").classList.add("hidden");
+  $("nextBtn").classList.remove("hidden");
+}
+
+function nextQuestion(){quizIndex++; renderQuiz();}
+
+function showResults(){
+  showOnly("results");
+  const total=quizDeck.length;
+  const pct=total?Math.round(score/total*100):0;
+  $("finalScore").textContent=score;
+  $("finalTotal").textContent=total;
+  $("finalPercent").textContent=pct+"%";
+  $("resultMessage").textContent=pct>=90?"Excellent work!":pct>=70?"Strong result — another round will lock it in.":pct>=50?"Good start. Try the learning round again, then retest.":"Use the learning round once more and build it up step by step.";
+}
+
+function restartSame(){ startQuiz(); }
+function goHome(){ showOnly("home"); }
+
+init();
+</script>
+<script>
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
