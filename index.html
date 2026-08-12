@@ -76,7 +76,22 @@ function init(){Object.keys(QUESTION_BANK).forEach(c=>{let b=document.createElem
 function updateHome(){$('levelHome').textContent='Level '+level()+' • '+STATE.xp+' XP';$('overall').textContent='5 XP per correct quiz answer. Every 100 XP advances one level.'}
 function pool(){let p=[];for(const c of selected)QUESTION_BANK[c].forEach((q,i)=>p.push({...q,cat:c,key:c+'|'+i}));return p}
 function randomUnique20(){let p=pool();for(let i=p.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[p[i],p[j]]=[p[j],p[i]]}return p.slice(0,Math.min(20,p.length))}
-function visual(q,target){if(q.flagCode){target.innerHTML='<img class="flagimg" src="https://flagcdn.com/w320/'+q.flagCode+'.png" onerror="this.outerHTML=\\'<div class=flagfallback>'+q.emoji+'</div>\\'">'}else target.innerHTML=''}
+function visual(q,target){
+  target.innerHTML='';
+  if(!q.flagCode) return;
+  const img=document.createElement('img');
+  img.className='flagimg';
+  img.src='https://flagcdn.com/w320/'+q.flagCode+'.png';
+  img.alt='Country flag';
+  img.onerror=()=>{
+    target.innerHTML='';
+    const fallback=document.createElement('div');
+    fallback.className='flagfallback';
+    fallback.textContent=q.emoji||'🏳️';
+    target.appendChild(fallback);
+  };
+  target.appendChild(img);
+}
 
 function startLearn(){if(!selected.size)return alert('Choose at least one category.');learnDeck=randomUnique20();li=0;show('learn');renderLearn()}
 function renderLearn(){if(li>=learnDeck.length)return home();let q=learnDeck[li];$('lc').textContent=(li+1)+'/'+learnDeck.length;$('lcat').textContent=q.cat;visual(q,$('lvisual'));$('lq').textContent=q.q;$('la').classList.add('hidden');$('learnNext').classList.add('hidden');$('learnAnswers').innerHTML='';q.a.forEach((a,i)=>{let b=document.createElement('button');b.className='answer';b.textContent=a;b.onclick=()=>guessLearn(i,b);$('learnAnswers').appendChild(b)})}
