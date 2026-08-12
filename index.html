@@ -1,48 +1,102 @@
 <!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111827"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b1020"><meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="QuizQuest"><link rel="manifest" href="manifest.webmanifest">
 <title>QuizQuest</title><style>
-*{box-sizing:border-box}body{margin:0;background:#0b1020;color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif}
-main{max-width:760px;margin:auto;padding:calc(20px + env(safe-area-inset-top)) 18px 40px}
-.card{background:#151d31;border:1px solid #334155;border-radius:22px;padding:20px;margin:14px 0}
-h1{font-size:38px;margin:8px 0}.muted{color:#bac5d6}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-button{font:inherit;font-weight:700;border:0;border-radius:14px;padding:14px;background:#7c3aed;color:white}
-.cat{background:#202a42;text-align:left}.cat.on{outline:3px solid #a78bfa}.answer{width:100%;margin:6px 0;background:#202a42;text-align:left}
-.top{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}.pill{background:#25304a;padding:7px 10px;border-radius:999px}
-.flag{font-size:92px;text-align:center;padding:18px}.good{background:#166534!important}.bad{background:#991b1b!important}
-.progress{height:9px;background:#263149;border-radius:9px;overflow:hidden;margin:12px 0}.progress i{display:block;height:100%;background:#8b5cf6}
-.hidden{display:none}.big{font-size:24px;font-weight:800}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
-.stats div{background:#202a42;padding:12px;border-radius:14px}.learn{border-left:5px solid #f59e0b;padding:12px;background:#202a42;border-radius:10px}
+*{box-sizing:border-box}body{margin:0;background:#080d19;color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif}
+main{max-width:800px;margin:auto;padding:calc(18px + env(safe-area-inset-top)) 16px calc(35px + env(safe-area-inset-bottom))}
+h1{font-size:40px;margin:5px 0}h2{margin-top:4px}.muted{color:#b7c1d4;line-height:1.5}
+.card{background:#121b2e;border:1px solid #2d3b57;border-radius:21px;padding:18px;margin:13px 0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+button{font:inherit;font-weight:750;border:0;border-radius:14px;padding:14px;background:#7c3aed;color:#fff;cursor:pointer}
+button.alt{background:#26324d}.cat{background:#202a42;text-align:left}.cat.on{outline:3px solid #a78bfa}
+.answer{display:block;width:100%;margin:8px 0;background:#202b44;text-align:left;font-size:16px}
+.answer:disabled{opacity:1}.good{background:#166534!important}.bad{background:#991b1b!important}
+.top{display:flex;justify-content:space-between;gap:7px;align-items:center;flex-wrap:wrap}.pill{background:#26324b;padding:7px 10px;border-radius:999px;font-size:14px}
+.big{font-size:23px;font-weight:800;line-height:1.35}.hidden{display:none!important}
+.progress{height:9px;background:#263149;border-radius:999px;overflow:hidden;margin:12px 0}.progress i{display:block;height:100%;background:#8b5cf6}
+.flagimg{display:block;width:min(300px,80%);max-height:180px;object-fit:contain;margin:20px auto;border-radius:5px;box-shadow:0 5px 20px #0006}
+.flagfallback{text-align:center;font-size:96px;margin:12px}.learnbox{background:#202b44;border-left:5px solid #f59e0b;padding:13px;border-radius:11px;margin:12px 0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}.stats div{background:#202a42;border-radius:13px;padding:12px}
+.search{width:100%;font:inherit;padding:13px 15px;border-radius:13px;border:1px solid #475569;background:#0e1628;color:#fff;margin:10px 0 15px}
+.flaglist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.flagcard{background:#1c2740;border:1px solid #334155;border-radius:15px;padding:12px;text-align:left}
+.flagcard img{width:64px;height:42px;object-fit:contain;vertical-align:middle;margin-right:8px}.countryName{font-weight:800}
+.studyhero{text-align:center}.studyhero img{max-width:330px;width:85%;max-height:210px;object-fit:contain;box-shadow:0 5px 25px #0008}
+.infoRow{padding:11px 0;border-bottom:1px solid #334155}.infoRow b{display:block;color:#c4b5fd;margin-bottom:4px}
+.back{background:#26324d;margin-bottom:10px}.source{font-size:12px;color:#94a3b8}
+@media(max-width:480px){.grid,.flaglist{grid-template-columns:1fr 1fr}.flagcard{font-size:14px}}
 </style></head><body><main>
-<section id="home"><h1>QuizQuest</h1><p class="muted">20 questions per round • learn, test, level up • no repeats until the category bank is exhausted.</p>
-<div class="card"><h2>Choose categories</h2><div id="cats" class="grid"></div></div>
-<button onclick="startLearn()">Learning round</button> <button onclick="startQuiz()">Start 20-question quiz</button>
-<div class="card"><div class="top"><b>Your progress</b><span id="levelHome" class="pill"></span></div><div id="overall"></div></div></section>
-<section id="learn" class="hidden card"><div class="top"><b>Learning Round</b><span id="lc" class="pill"></span></div><div id="lcat" class="pill"></div><div id="lflag" class="flag"></div><p id="lq" class="big"></p><div id="learnAnswers"></div><div id="la" class="learn hidden"></div><br><button id="learnNext" class="hidden" onclick="nextLearn()">Next</button> <button onclick="startQuiz()">Quiz me</button></section>
-<section id="quiz" class="hidden card"><div class="top"><span id="qc" class="pill"></span><span id="lvl" class="pill"></span><span id="score" class="pill"></span></div><div class="progress"><i id="bar"></i></div><div id="qcat" class="pill"></div><div id="qflag" class="flag"></div><p id="qq" class="big"></p><div id="answers"></div><div id="fb"></div><button id="next" class="hidden" onclick="nextQ()">Next</button></section>
-<section id="result" class="hidden card"><h2>Round complete 🎉</h2><div class="stats"><div><b id="rs"></b><br>Correct</div><div><b id="rp"></b><br>Score</div><div><b id="rl"></b><br>Level</div></div><p id="msg"></p><button id="mistakeBtn" class="hidden" onclick="startMistakes()">Study my mistakes</button> <button onclick="startQuiz()">Next round</button> <button onclick="home()">Categories</button></section>
-<section id="mistakes" class="hidden card"><div class="top"><b>Study My Mistakes</b><span id="mc" class="pill"></span></div><div class="progress"><i id="mbar"></i></div><div id="mcat" class="pill"></div><div id="mflag" class="flag"></div><p id="mq" class="big"></p><div id="manswers"></div><div id="mfb"></div><button id="mnext" class="hidden" onclick="nextMistake()">Next</button></section>
-<script src="questions.js"></script><script>
-const S=JSON.parse(localStorage.getItem('qq2')||'{"xp":0,"used":{}}');let selected=new Set(Object.keys(QUESTION_BANK)),deck=[],idx=0,score=0,learnDeck=[],li=0,mistakes=[],midx=0;
-const $=x=>document.getElementById(x), save=()=>localStorage.setItem('qq2',JSON.stringify(S));
-function level(){return Math.floor(S.xp/100)+1} function show(id){['home','learn','quiz','result','mistakes'].forEach(x=>$(x).classList.toggle('hidden',x!==id))}
-function init(){for(const c of Object.keys(QUESTION_BANK)){let b=document.createElement('button');b.className='cat on';b.textContent=c+' ('+QUESTION_BANK[c].length+')';b.onclick=()=>{selected.has(c)?selected.delete(c):selected.add(c);b.classList.toggle('on')};$('cats').appendChild(b)}updateHome()}
-function updateHome(){$('levelHome').textContent='Level '+level()+' • '+S.xp+' XP';$('overall').textContent='Every correct answer earns 5 XP. Every 100 XP advances a level.'}
-function pool(){let p=[];for(const c of selected){QUESTION_BANK[c].forEach((q,i)=>p.push({...q,cat:c,key:c+'|'+i}))}return p}
-function fresh(n){let p=pool().filter(q=>!S.used[q.key]);if(p.length<n){for(const c of selected)Object.keys(S.used).filter(k=>k.startsWith(c+'|')).forEach(k=>delete S.used[k]);p=pool().filter(q=>!S.used[q.key])}return p.sort(()=>Math.random()-.5).slice(0,n)}
-function startLearn(){if(!selected.size)return alert('Choose a category');learnDeck=fresh(20);li=0;show('learn');renderLearn()}
-function renderLearn(){if(li>=learnDeck.length)return startQuiz();let q=learnDeck[li];$('lc').textContent=(li+1)+'/20';$('lcat').textContent=q.cat;$('lflag').textContent=q.flag||'';$('lq').textContent=q.q;$('la').classList.add('hidden');$('learnNext').classList.add('hidden');$('learnAnswers').innerHTML='';q.a.forEach((a,i)=>{let b=document.createElement('button');b.className='answer';b.textContent=a;b.onclick=()=>guessLearn(i,b);$('learnAnswers').appendChild(b)})}
-function guessLearn(i,b){let q=learnDeck[li];[...$('learnAnswers').children].forEach(x=>x.disabled=true);if(i===q.correct)b.classList.add('good');else{b.classList.add('bad');$('learnAnswers').children[q.correct].classList.add('good')}$('la').innerHTML='<b>Answer:</b> '+q.a[q.correct]+'<br><span class="muted">'+q.fact+'</span>';$('la').classList.remove('hidden');$('learnNext').classList.remove('hidden')}
+<section id="home">
+<h1>QuizQuest</h1><p class="muted">20 questions per round. Questions are random every time, and the same question can return in a later round.</p>
+<div class="card"><h2>Choose quiz categories</h2><div id="cats" class="grid"></div></div>
+<div class="grid"><button onclick="startLearn()">Learning Round</button><button onclick="startQuiz()">20-Question Quiz</button></div>
+<button class="alt" style="width:100%;margin-top:9px" onclick="openFlagStudy()">🏳️ Flag Study — learn every country's flag</button>
+<div class="card"><div class="top"><b>Progress</b><span id="levelHome" class="pill"></span></div><p id="overall" class="muted"></p></div>
+</section>
+
+<section id="learn" class="hidden card">
+<div class="top"><b>Learning Round</b><span id="lc" class="pill"></span></div><div id="lcat" class="pill"></div>
+<div id="lvisual"></div><p id="lq" class="big"></p><div id="learnAnswers"></div>
+<div id="la" class="learnbox hidden"></div><button id="learnNext" class="hidden" onclick="nextLearn()">Next</button> <button class="alt" onclick="home()">Exit</button>
+</section>
+
+<section id="quiz" class="hidden card">
+<div class="top"><span id="qc" class="pill"></span><span id="lvl" class="pill"></span><span id="score" class="pill"></span></div>
+<div class="progress"><i id="bar"></i></div><div id="qcat" class="pill"></div><div id="qvisual"></div>
+<p id="qq" class="big"></p><div id="answers"></div><div id="fb"></div><button id="next" class="hidden" onclick="nextQ()">Next</button>
+</section>
+
+<section id="result" class="hidden card"><h2>Round complete 🎉</h2>
+<div class="stats"><div><b id="rs"></b><br>Correct</div><div><b id="rp"></b><br>Score</div><div><b id="rl"></b><br>Level</div></div>
+<p id="msg"></p><div class="grid"><button id="mistakeBtn" class="hidden" onclick="startMistakes()">Study My Mistakes</button><button onclick="startQuiz()">Random New Round</button></div>
+<button class="alt" style="width:100%;margin-top:9px" onclick="home()">Categories</button></section>
+
+<section id="mistakes" class="hidden card"><div class="top"><b>Study My Mistakes</b><span id="mc" class="pill"></span></div>
+<div class="progress"><i id="mbar"></i></div><div id="mcat" class="pill"></div><div id="mvisual"></div><p id="mq" class="big"></p>
+<div id="manswers"></div><div id="mfb"></div><button id="mnext" class="hidden" onclick="nextMistake()">Next</button></section>
+
+<section id="flagStudy" class="hidden">
+<button class="back" onclick="home()">← Back to QuizQuest</button><h1>Flag Study</h1>
+<p class="muted">Tap a country to study its flag, capital city, distinctive design and the history/significance behind it.</p>
+<input id="flagSearch" class="search" placeholder="Search country…" oninput="renderFlagList()">
+<div id="flagList" class="flaglist"></div></section>
+
+<section id="flagDetail" class="hidden">
+<button class="back" onclick="openFlagStudy()">← All flags</button><div id="flagDetailCard" class="card"></div></section>
+
+<script src="data.js"></script><script>
+const $=x=>document.getElementById(x);
+const STATE=JSON.parse(localStorage.getItem('quizquest4')||'{"xp":0}');
+let selected=new Set(Object.keys(QUESTION_BANK)),deck=[],idx=0,score=0,learnDeck=[],li=0,mistakes=[],midx=0;
+function save(){localStorage.setItem('quizquest4',JSON.stringify(STATE))}
+function level(){return Math.floor(STATE.xp/100)+1}
+function show(id){['home','learn','quiz','result','mistakes','flagStudy','flagDetail'].forEach(x=>$(x).classList.toggle('hidden',x!==id));scrollTo(0,0)}
+function home(){show('home');updateHome()}
+function init(){Object.keys(QUESTION_BANK).forEach(c=>{let b=document.createElement('button');b.className='cat on';b.innerHTML='<b>'+c+'</b><br><span class="muted">'+QUESTION_BANK[c].length+' questions</span>';b.onclick=()=>{selected.has(c)?selected.delete(c):selected.add(c);b.classList.toggle('on')};$('cats').appendChild(b)});updateHome()}
+function updateHome(){$('levelHome').textContent='Level '+level()+' • '+STATE.xp+' XP';$('overall').textContent='5 XP per correct quiz answer. Every 100 XP advances one level.'}
+function pool(){let p=[];for(const c of selected)QUESTION_BANK[c].forEach((q,i)=>p.push({...q,cat:c,key:c+'|'+i}));return p}
+function randomUnique20(){let p=pool();for(let i=p.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[p[i],p[j]]=[p[j],p[i]]}return p.slice(0,Math.min(20,p.length))}
+function visual(q,target){if(q.flagCode){target.innerHTML='<img class="flagimg" src="https://flagcdn.com/w320/'+q.flagCode+'.png" onerror="this.outerHTML=\\'<div class=flagfallback>'+q.emoji+'</div>\\'">'}else target.innerHTML=''}
+
+function startLearn(){if(!selected.size)return alert('Choose at least one category.');learnDeck=randomUnique20();li=0;show('learn');renderLearn()}
+function renderLearn(){if(li>=learnDeck.length)return home();let q=learnDeck[li];$('lc').textContent=(li+1)+'/'+learnDeck.length;$('lcat').textContent=q.cat;visual(q,$('lvisual'));$('lq').textContent=q.q;$('la').classList.add('hidden');$('learnNext').classList.add('hidden');$('learnAnswers').innerHTML='';q.a.forEach((a,i)=>{let b=document.createElement('button');b.className='answer';b.textContent=a;b.onclick=()=>guessLearn(i,b);$('learnAnswers').appendChild(b)})}
+function guessLearn(i,b){let q=learnDeck[li];[...$('learnAnswers').children].forEach(x=>x.disabled=true);if(i===q.correct)b.classList.add('good');else{b.classList.add('bad');$('learnAnswers').children[q.correct].classList.add('good')}$('la').innerHTML='<b>Correct answer: '+q.a[q.correct]+'</b><br><span class="muted">'+q.fact+'</span>';$('la').classList.remove('hidden');$('learnNext').classList.remove('hidden')}
 function nextLearn(){li++;renderLearn()}
-function startQuiz(){if(!selected.size)return alert('Choose a category');deck=fresh(20);idx=0;score=0;mistakes=[];show('quiz');renderQ()}
-function renderQ(){if(idx>=deck.length)return finish();let q=deck[idx];$('qc').textContent=(idx+1)+'/20';$('lvl').textContent='Level '+level();$('score').textContent='Score '+score;$('bar').style.width=((idx)/20*100)+'%';$('qcat').textContent=q.cat;$('qflag').textContent=q.flag||'';$('qq').textContent=q.q;$('fb').innerHTML='';$('next').classList.add('hidden');$('answers').innerHTML='';q.a.forEach((a,i)=>{let b=document.createElement('button');b.className='answer';b.textContent=a;b.onclick=()=>answer(i,b);$('answers').appendChild(b)})}
-function answer(i,b){let q=deck[idx];[...$('answers').children].forEach(x=>x.disabled=true);let ok=i===q.correct;if(ok){score++;S.xp+=5;b.classList.add('good')}else{mistakes.push(q);b.classList.add('bad');$('answers').children[q.correct].classList.add('good')}S.used[q.key]=1;save();$('fb').innerHTML='<p class="'+(ok?'':'muted')+'">'+(ok?'Correct! ✅ ':'Not quite. ')+q.fact+'</p>';$('next').classList.remove('hidden')}
-function nextQ(){idx++;renderQ()}function finish(){show('result');let pct=Math.round(score/20*100);$('rs').textContent=score+'/20';$('rp').textContent=pct+'%';$('rl').textContent=level();$('msg').textContent=mistakes.length?('You missed '+mistakes.length+' question'+(mistakes.length===1?'':'s')+'. Use Study My Mistakes to answer only those again.'):'Perfect round — no mistakes to study!';$('mistakeBtn').classList.toggle('hidden',mistakes.length===0);updateHome()}
+
+function startQuiz(){if(!selected.size)return alert('Choose at least one category.');deck=randomUnique20();idx=0;score=0;mistakes=[];show('quiz');renderQ()}
+function renderQ(){if(idx>=deck.length)return finish();let q=deck[idx];$('qc').textContent=(idx+1)+'/'+deck.length;$('lvl').textContent='Level '+level();$('score').textContent='Score '+score;$('bar').style.width=(idx/deck.length*100)+'%';$('qcat').textContent=q.cat;visual(q,$('qvisual'));$('qq').textContent=q.q;$('fb').innerHTML='';$('next').classList.add('hidden');$('answers').innerHTML='';q.a.forEach((a,i)=>{let b=document.createElement('button');b.className='answer';b.textContent=a;b.onclick=()=>answer(i,b);$('answers').appendChild(b)})}
+function answer(i,b){let q=deck[idx];[...$('answers').children].forEach(x=>x.disabled=true);let ok=i===q.correct;if(ok){score++;STATE.xp+=5;b.classList.add('good')}else{mistakes.push(q);b.classList.add('bad');$('answers').children[q.correct].classList.add('good')}save();$('score').textContent='Score '+score;$('fb').innerHTML='<div class="learnbox">'+(ok?'<b>Correct! ✅</b>':'<b>Not quite.</b>')+'<br>'+q.fact+'</div>';$('next').classList.remove('hidden')}
+function nextQ(){idx++;renderQ()}
+function finish(){show('result');let total=deck.length,pct=Math.round(score/total*100);$('rs').textContent=score+'/'+total;$('rp').textContent=pct+'%';$('rl').textContent=level();$('msg').textContent=mistakes.length?'You missed '+mistakes.length+' question'+(mistakes.length===1?'':'s')+'. Study only those questions again below.':'Perfect round — no mistakes to study!';$('mistakeBtn').classList.toggle('hidden',!mistakes.length);updateHome()}
+
 function startMistakes(){midx=0;show('mistakes');renderMistake()}
-function renderMistake(){if(midx>=mistakes.length){show('result');$('msg').textContent='Mistake review complete. You worked back through every question you missed in that round.';$('mistakeBtn').classList.add('hidden');return}let q=mistakes[midx];$('mc').textContent=(midx+1)+'/'+mistakes.length;$('mbar').style.width=((midx)/mistakes.length*100)+'%';$('mcat').textContent=q.cat;$('mflag').textContent=q.flag||'';$('mq').textContent=q.q;$('mfb').innerHTML='';$('mnext').classList.add('hidden');$('manswers').innerHTML='';q.a.forEach((a,i)=>{let b=document.createElement('button');b.className='answer';b.textContent=a;b.onclick=()=>answerMistake(i,b);$('manswers').appendChild(b)})}
-function answerMistake(i,b){let q=mistakes[midx];[...$('manswers').children].forEach(x=>x.disabled=true);let ok=i===q.correct;if(ok)b.classList.add('good');else{b.classList.add('bad');$('manswers').children[q.correct].classList.add('good')}$('mfb').innerHTML='<p>'+(ok?'Correct this time! ✅ ':'Not quite yet. ')+q.fact+'</p>';$('mnext').classList.remove('hidden')}
+function renderMistake(){if(midx>=mistakes.length){show('result');$('msg').textContent='Mistake review complete. You have now worked through every question you missed.';$('mistakeBtn').classList.add('hidden');return}let q=mistakes[midx];$('mc').textContent=(midx+1)+'/'+mistakes.length;$('mbar').style.width=(midx/mistakes.length*100)+'%';$('mcat').textContent=q.cat;visual(q,$('mvisual'));$('mq').textContent=q.q;$('mfb').innerHTML='';$('mnext').classList.add('hidden');$('manswers').innerHTML='';q.a.forEach((a,i)=>{let b=document.createElement('button');b.className='answer';b.textContent=a;b.onclick=()=>answerMistake(i,b);$('manswers').appendChild(b)})}
+function answerMistake(i,b){let q=mistakes[midx];[...$('manswers').children].forEach(x=>x.disabled=true);let ok=i===q.correct;if(ok)b.classList.add('good');else{b.classList.add('bad');$('manswers').children[q.correct].classList.add('good')}$('mfb').innerHTML='<div class="learnbox">'+(ok?'<b>Correct this time! ✅</b>':'<b>Not quite yet.</b>')+'<br>'+q.fact+'</div>';$('mnext').classList.remove('hidden')}
 function nextMistake(){midx++;renderMistake()}
-function home(){show('home');updateHome()}init();
-if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+function openFlagStudy(){show('flagStudy');$('flagSearch').value='';renderFlagList()}
+function renderFlagList(){let term=$('flagSearch').value.toLowerCase().trim();let arr=COUNTRY_DATA.filter(c=>c.name.toLowerCase().includes(term));$('flagList').innerHTML='';arr.forEach(c=>{let b=document.createElement('button');b.className='flagcard';b.innerHTML='<img src="https://flagcdn.com/w160/'+c.code.toLowerCase()+'.png"><span class="countryName">'+c.name+'</span><br><span class="muted">'+c.capital+'</span>';b.onclick=()=>openFlag(c.name);$('flagList').appendChild(b)})}
+async function openFlag(name){let c=COUNTRY_DATA.find(x=>x.name===name);show('flagDetail');let card=$('flagDetailCard');card.innerHTML='<div class="studyhero"><img src="https://flagcdn.com/w640/'+c.code.toLowerCase()+'.png"><h1>'+c.name+'</h1></div><div class="infoRow"><b>Capital</b>'+c.capital+'</div><div class="infoRow"><b>Flag significance & what makes it distinctive</b><span id="wikiInfo">Loading the flag history…</span></div><p class="source">Flag image: FlagCDN. Flag-history study note: Wikipedia article “'+c.wiki+'”.</p>';
+try{let u='https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&redirects=1&origin=*&format=json&titles='+encodeURIComponent(c.wiki);let r=await fetch(u);let j=await r.json();let pg=Object.values(j.query.pages)[0];let txt=(pg.extract||'').trim();if(!txt)throw 0;let sentences=txt.split(/(?<=[.!?])\s+/).slice(0,6).join(' ');$('wikiInfo').textContent=sentences}catch(e){$('wikiInfo').textContent='This flag is a national symbol whose colours, shapes and emblems reflect the country’s history and identity. Internet access is needed to load the fuller flag-history study note.'}}
+init();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script></main></body></html>
