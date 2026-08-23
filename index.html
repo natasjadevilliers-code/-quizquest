@@ -30,7 +30,7 @@ button.alt{background:#26324d}.cat{background:#202a42;text-align:left}.cat.on{ou
 <h1>QuizQuest</h1><p class="muted">20 questions per round. Questions are random every time, and the same question can return in a later round.</p>
 <div class="card"><h2>Choose quiz categories</h2><div id="cats" class="grid"></div></div>
 <div class="grid"><button onclick="startLearn()">Learning Round</button><button onclick="startQuiz()">20-Question Quiz</button></div>
-<button class="alt" style="width:100%;margin-top:9px" onclick="openFlagStudy()">🏳️ Flag Study — learn every country's flag</button>
+<button class="alt" style="width:100%;margin-top:9px" onclick="openFlagStudy()">🏳️ Flag Study — learn every country's flag</button><div class="card"><h2>Pub Quiz Training</h2><p class="muted">Mixed NZ-style general knowledge with different pub-quiz formats.</p><div class="grid"><button onclick="startPubQuiz()">🍻 Pub Quiz Mix</button><button onclick="startLastMan()">⚡ Last Man Standing</button><button onclick="startPonderous()">🧩 Progressive Clues</button><button onclick="startList()">📝 The List</button></div></div>
 <div class="card"><div class="top"><b>Progress</b><span id="levelHome" class="pill"></span></div><p id="overall" class="muted"></p></div>
 </section>
 
@@ -64,13 +64,14 @@ button.alt{background:#26324d}.cat{background:#202a42;text-align:left}.cat.on{ou
 <section id="flagDetail" class="hidden">
 <button class="back" onclick="openFlagStudy()">← All flags</button><div id="flagDetailCard" class="card"></div></section>
 
+<section id="special" class="hidden card"><button class="back" onclick="home()">← Home</button><div id="specialBody"></div></section>
 <script src="data.js"></script><script>
 const $=x=>document.getElementById(x);
 const STATE=JSON.parse(localStorage.getItem('quizquest4')||'{"xp":0}');
 let selected=new Set(Object.keys(QUESTION_BANK)),deck=[],idx=0,score=0,learnDeck=[],li=0,mistakes=[],midx=0;
 function save(){localStorage.setItem('quizquest4',JSON.stringify(STATE))}
 function level(){return Math.floor(STATE.xp/100)+1}
-function show(id){['home','learn','quiz','result','mistakes','flagStudy','flagDetail'].forEach(x=>$(x).classList.toggle('hidden',x!==id));scrollTo(0,0)}
+function show(id){['home','learn','quiz','result','mistakes','flagStudy','flagDetail','special'].forEach(x=>$(x).classList.toggle('hidden',x!==id));scrollTo(0,0)}
 function home(){show('home');updateHome()}
 function init(){Object.keys(QUESTION_BANK).forEach(c=>{let b=document.createElement('button');b.className='cat on';b.innerHTML='<b>'+c+'</b><br><span class="muted">'+QUESTION_BANK[c].length+' questions</span>';b.onclick=()=>{selected.has(c)?selected.delete(c):selected.add(c);b.classList.toggle('on')};$('cats').appendChild(b)});updateHome()}
 function updateHome(){$('levelHome').textContent='Level '+level()+' • '+STATE.xp+' XP';$('overall').textContent='5 XP per correct quiz answer. Every 100 XP advances one level.'}
@@ -113,5 +114,19 @@ function openFlagStudy(){show('flagStudy');$('flagSearch').value='';renderFlagLi
 function renderFlagList(){let term=$('flagSearch').value.toLowerCase().trim();let arr=COUNTRY_DATA.filter(c=>c.name.toLowerCase().includes(term));$('flagList').innerHTML='';arr.forEach(c=>{let b=document.createElement('button');b.className='flagcard';b.innerHTML='<img src="https://flagcdn.com/w160/'+c.code.toLowerCase()+'.png"><span class="countryName">'+c.name+'</span><br><span class="muted">'+c.capital+'</span>';b.onclick=()=>openFlag(c.name);$('flagList').appendChild(b)})}
 async function openFlag(name){let c=COUNTRY_DATA.find(x=>x.name===name);show('flagDetail');let card=$('flagDetailCard');card.innerHTML='<div class="studyhero"><img src="https://flagcdn.com/w640/'+c.code.toLowerCase()+'.png"><h1>'+c.name+'</h1></div><div class="infoRow"><b>Capital</b>'+c.capital+'</div><div class="infoRow"><b>Flag significance & what makes it distinctive</b><span id="wikiInfo">Loading the flag history…</span></div><p class="source">Flag image: FlagCDN. Flag-history study note: Wikipedia article “'+c.wiki+'”.</p>';
 try{let u='https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&redirects=1&origin=*&format=json&titles='+encodeURIComponent(c.wiki);let r=await fetch(u);let j=await r.json();let pg=Object.values(j.query.pages)[0];let txt=(pg.extract||'').trim();if(!txt)throw 0;let sentences=txt.split(/(?<=[.!?])\s+/).slice(0,6).join(' ');$('wikiInfo').textContent=sentences}catch(e){$('wikiInfo').textContent='This flag is a national symbol whose colours, shapes and emblems reflect the country’s history and identity. Internet access is needed to load the fuller flag-history study note.'}}
+
+function startPubQuiz(){selected=new Set(['Pub Quiz Mix']);startQuiz()}
+let lmDeck=[],lmI=0,lmScore=0;
+function startLastMan(){lmDeck=[...LAST_MAN_BANK].sort(()=>Math.random()-.5);lmI=0;lmScore=0;show('special');renderLM()}
+function renderLM(){let b=$('specialBody');if(lmI>=lmDeck.length){b.innerHTML='<h2>Last Man Standing complete</h2><p class="big">'+lmScore+'/'+lmDeck.length+'</p><button onclick="startLastMan()">Play again</button>';return}let q=lmDeck[lmI];b.innerHTML='<div class="top"><h2>Last Man Standing</h2><span class="pill">'+(lmI+1)+'/'+lmDeck.length+'</span></div><p class="muted">Two choices only — pick one.</p><p class="big">'+q.q+'</p><div id="lmOpts"></div><div id="lmFb"></div>';q.a.forEach((a,i)=>{let x=document.createElement('button');x.className='answer';x.textContent=a;x.onclick=()=>{[...$('lmOpts').children].forEach(y=>y.disabled=true);if(i===q.correct){x.classList.add('good');lmScore++}else{x.classList.add('bad');$('lmOpts').children[q.correct].classList.add('good')}$('lmFb').innerHTML='<div class="learnbox">'+q.fact+'</div><button onclick="lmI++;renderLM()">Next</button>'};$('lmOpts').appendChild(x)})}
+let pond,clueI=0;
+function startPonderous(){pond=PONDEROUS_BANK[Math.floor(Math.random()*PONDEROUS_BANK.length)];clueI=0;show('special');renderPond()}
+function renderPond(){let pts=10-clueI*2;let clues=pond.clues.slice(0,clueI+1).map((x,i)=>'<div class="learnbox"><b>Clue '+(i+1)+'</b><br>'+x+'</div>').join('');$('specialBody').innerHTML='<h2>Progressive Clues</h2><p class="muted">Try to identify the answer as early as possible. Current value: <b>'+pts+' points</b>.</p>'+clues+'<input id="pondGuess" class="search" placeholder="Type your answer…"><div class="grid"><button onclick="checkPond()">Submit guess</button><button class="alt" onclick="moreClue()">Another clue</button></div><div id="pondFb"></div>'}
+function checkPond(){let g=$('pondGuess').value.trim().toLowerCase();if(!g)return;let ok=g===pond.answer.toLowerCase();if(ok){$('pondFb').innerHTML='<div class="learnbox"><b>Correct! '+(10-clueI*2)+' points.</b><br>'+pond.answer+'</div><button onclick="startPonderous()">New puzzle</button>'}else $('pondFb').innerHTML='<div class="learnbox">Not it yet. Try again or reveal another clue.</div>'}
+function moreClue(){if(clueI<pond.clues.length-1){clueI++;renderPond()}else $('pondFb').innerHTML='<div class="learnbox"><b>Answer: '+pond.answer+'</b></div><button onclick="startPonderous()">New puzzle</button>'}
+let listGame;
+function startList(){listGame=LIST_BANK[Math.floor(Math.random()*LIST_BANK.length)];show('special');$('specialBody').innerHTML='<h2>The List</h2><p class="muted">Enter up to 10 answers. Put your dead certs first. Scoring stops at your first wrong answer.</p><p class="big">'+listGame.title+'</p><div id="listInputs"></div><button onclick="scoreList()">Score my list</button><div id="listFb"></div>';for(let i=0;i<10;i++)$('listInputs').innerHTML+='<input class="search listInput" placeholder="'+(i+1)+'. answer">'}
+function scoreList(){let valid=listGame.answers.map(x=>x.toLowerCase());let ins=[...document.querySelectorAll('.listInput')].map(x=>x.value.trim());let score=0,rows=[];for(let i=0;i<ins.length;i++){if(!ins[i])break;let ok=valid.includes(ins[i].toLowerCase());rows.push((ok?'✅ ':'❌ ')+ins[i]);if(!ok)break;score++} $('listFb').innerHTML='<div class="learnbox"><b>Chain score: '+score+'</b><br>'+rows.join('<br>')+'<br><br><b>Valid answers include:</b> '+listGame.answers.join(', ')+'</div><button onclick="startList()">New list</button>'}
+
 init();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script></main></body></html>
