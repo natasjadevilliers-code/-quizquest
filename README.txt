@@ -1,5 +1,16 @@
-QuizQuest v6 — Pub Quiz Trainer
-Adds an original NZ-style Pub Quiz Mix plus Progressive Clues, Last Man Standing and The List.
-Questions are inspired by general pub-quiz mechanics and Believe It or Not's publicly described formats, but the question bank is newly written rather than copied wholesale.
-Keeps all existing categories, Learning Round, Study My Mistakes, flags, XP and levels.
-Upload/replace all five files in the GitHub Pages repository.
+QuizQuest v7 — Round Lengths
+
+NEW:
+• Choose 20, 40, 50 or 60 questions per round.
+• The chosen length applies to the Learning Round, normal category quizzes and Pub Quiz Mix.
+• Score, XP, levels and Study My Mistakes work with every round length.
+
+Still included:
+• Pub Quiz Mix
+• Progressive Clues
+• Last Man Standing
+• The List
+• All study categories
+• Flags of the World and Flag Study
+
+Upload/replace all five files in the root of your GitHub Pages repository.
